@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Log Analysis - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     STEP 7: LOG ANALYSIS                          (HTML + JS AJAX)
+================================================================ -->
+<div class="page-header">
+  <h1>📊 Server / Firewall Log Analysis</h1>
+  <p>Upload Apache, firewall, or server logs. The AI engine scans for brute force, SQL injection, DDoS, and port scanning patterns.</p>
+</div>
+
+<div class="card" style="max-width:760px;">
+  <label>Upload Log File (.log / .txt)</label>
+  <input type="file" id="logFile" accept=".log,.txt,.csv">
+
+  <label class="mt-16">Or Paste Log Content</label>
+  <textarea id="logText" placeholder="Paste raw log lines here, e.g.
+192.168.1.5 - Failed password for admin
+203.0.113.9 - GET /login?user=' OR 1=1--
+198.51.100.4 - nmap SYN_SCAN detected"></textarea>
+
+  <button class="btn btn-primary mt-16" id="logBtn" onclick="analyzeLogs()">🤖 Run AI Log Analysis</button>
+  <div id="logResult"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// (JAVASCRIPT) Sends log file or text to Python backend for pattern analysis
+async function analyzeLogs() {
+  const fileInput = document.getElementById('logFile');
+  const text = document.getElementById('logText').value;
+  const btn = document.getElementById('logBtn');
+  const resultDiv = document.getElementById('logResult');
+
+  if (!fileInput.files.length && !text.trim()) {
+    alert('Please upload a log file or paste log content.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Scanning logs...';
+
+  const formData = new FormData();
+  if (fileInput.files.length) formData.append('log_file', fileInput.files[0]);
+  else formData.append('log_text', text);
+
+  try {
+    const res = await fetch("{{ url_for('api_log_analysis') }}", { method: "POST", body: formData });
+    const data = await res.json();
+    const riskColor = data.risk_score >= 70 ? 'var(--red)' : data.risk_score >= 35 ? 'var(--orange)' : 'var(--green)';
+
+    let threatsHtml = data.threats.map(t => `
+      <li><b>${t.type}:</b> ${t.detail}</li>
+    `).join('');
+
+    resultDiv.innerHTML = `
+      <div class="result-box">
+        <h3>Log Analysis Result (${data.lines_analyzed} lines scanned)</h3>
+        <div class="risk-meter-wrap">
+          <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${data.risk_score}%; background:${riskColor};"></div></div>
+          <div class="risk-label"><span>Threat Score</span><span style="color:${riskColor}">${data.risk_score}%</span></div>
+        </div>
+        <ul class="findings-list">${threatsHtml}</ul>
+      </div>`;
+  } catch (err) {
+    resultDiv.innerHTML = '<div class="alert alert-error">Log analysis failed.</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🤖 Run AI Log Analysis';
+}
+</script>
+{% endblock %}

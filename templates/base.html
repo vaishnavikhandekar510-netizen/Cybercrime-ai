@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- ================================================================
+     BASE LAYOUT TEMPLATE                              (HTML)
+     All other pages extend this file (Jinja2 templating).
+================================================================ -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Cybercrime Investigation Assistant{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  {% if session.username %}
+  <nav class="navbar">
+    <div class="brand">
+      <div class="logo-mark">
+        <!-- Shield + magnifier "investigate" mark (SVG)   (HTML) -->
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L4 5v6c0 5.2 3.4 9.8 8 11 4.6-1.2 8-5.8 8-11V5l-8-3z" fill="white" fill-opacity="0.16" stroke="white" stroke-width="1.4" stroke-linejoin="round"/>
+          <circle cx="10.8" cy="10.8" r="3.1" stroke="white" stroke-width="1.5"/>
+          <line x1="13.1" y1="13.1" x2="15.6" y2="15.6" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-main">CyberInvestigate AI</span>
+        <span class="brand-sub">Staff Investigation Backend</span>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+      <li><a href="{{ url_for('new_case') }}">New Case</a></li>
+      <li><a href="{{ url_for('tools_ip') }}">IP Check</a></li>
+      <li><a href="{{ url_for('tools_log') }}">Log Analysis</a></li>
+      <li><a href="{{ url_for('tools_chat') }}">Chat Analysis</a></li>
+      <li><a href="{{ url_for('tools_url') }}">URL Analysis</a></li>
+    </ul>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="user-chip">
+        <span>{{ session.full_name }}</span>
+        <span class="role-badge">{{ session.role }}</span>
+      </div>
+      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile slide-down nav panel                          (HTML/JS) -->
+  <div class="mobile-nav-panel" id="mobileNavPanel">
+    <div class="mobile-user-row">
+      <span>{{ session.full_name }}</span>
+      <span class="role-badge">{{ session.role }}</span>
+    </div>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('new_case') }}">New Case</a>
+    <a href="{{ url_for('tools_ip') }}">IP Check</a>
+    <a href="{{ url_for('tools_log') }}">Log Analysis</a>
+    <a href="{{ url_for('tools_chat') }}">Chat Analysis</a>
+    <a href="{{ url_for('tools_url') }}">URL Analysis</a>
+    <a href="{{ url_for('logout') }}" class="mobile-logout">Logout</a>
+  </div>
+  {% endif %}
+
+  <div class="page-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer>AI Cybercrime Investigation Assistant &mdash; Academic Demonstration Project &copy; 2026</footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!-- ================================================================
+     VERIFY OTP - recover username OR reset password         (HTML/JS)
+     Two forms sharing one OTP: a toggle switches which action is
+     submitted. The OTP itself was "sent" (simulated) in the
+     previous step and shown via flash message for this demo.
+================================================================ -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP - CyberInvestigate AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-box">
+      <div class="logo-row">
+        {% include "_logo.html" %}
+        <h1>Verify OTP</h1>
+        <div class="subtitle">Enter the 6-digit code sent to your phone</div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="role-select-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="role-option selected" id="tabRecoverUsername" onclick="showTab('username')">Recover Username</div>
+        <div class="role-option" id="tabResetPassword" onclick="showTab('password')">Reset Password</div>
+      </div>
+
+      <form method="POST" action="{{ url_for('verify_otp') }}" id="usernameForm">
+        <input type="hidden" name="action" value="recover_username">
+        <label for="otp1">6-Digit OTP</label>
+        <input type="text" id="otp1" name="otp" placeholder="Enter OTP" maxlength="6" required autofocus>
+        <button type="submit" class="btn btn-primary">Recover Username</button>
+      </form>
+
+      <form method="POST" action="{{ url_for('verify_otp') }}" id="passwordForm" style="display:none;">
+        <input type="hidden" name="action" value="reset_password">
+        <label for="otp2">6-Digit OTP</label>
+        <input type="text" id="otp2" name="otp" placeholder="Enter OTP" maxlength="6" required>
+
+        <label for="new_password">New Password</label>
+        <div class="password-field-wrap">
+          <input type="password" id="new_password" name="new_password" placeholder="At least 6 characters" minlength="6">
+          <button type="button" class="password-toggle-btn" data-target="new_password" aria-label="Show password">
+            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <label for="confirm_password">Confirm New Password</label>
+        <div class="password-field-wrap">
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password" minlength="6">
+          <button type="button" class="password-toggle-btn" data-target="confirm_password" aria-label="Show password">
+            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button type="submit" class="btn btn-primary">Reset Password</button>
+      </form>
+
+      <div class="demo-hint">
+        <a href="{{ url_for('forgot_access') }}" style="color:var(--neon); font-weight:600;">Didn't get a code? Request again</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(which) {
+      const isUsername = which === 'username';
+      document.getElementById('usernameForm').style.display = isUsername ? 'block' : 'none';
+      document.getElementById('passwordForm').style.display = isUsername ? 'none' : 'block';
+      document.getElementById('tabRecoverUsername').classList.toggle('selected', isUsername);
+      document.getElementById('tabResetPassword').classList.toggle('selected', !isUsername);
+    }
+
+    const EYE_OPEN = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>';
+    const EYE_OFF = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a18.6 18.6 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetInput = document.getElementById(btn.dataset.target);
+        const icon = btn.querySelector('.eye-icon');
+        const isHidden = targetInput.type === 'password';
+        targetInput.type = isHidden ? 'text' : 'password';
+        icon.innerHTML = isHidden ? EYE_OFF : EYE_OPEN;
+      });
+    });
+  </script>
+</body>
+</html>

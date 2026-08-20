@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}New Case - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     STEP 2: CREATE A NEW CASE                          (HTML)
+================================================================ -->
+<div class="page-header">
+  <h1>Register New Case</h1>
+  <p>Fill in the victim and incident details. The AI will auto-suggest a crime category from the description.</p>
+</div>
+
+<div class="card" style="max-width:720px;">
+  <form method="POST" action="{{ url_for('new_case') }}">
+    <div class="grid-2">
+      <div>
+        <label for="case_id">Case ID</label>
+        <input type="text" id="case_id" name="case_id" value="{{ suggested_id }}" required>
+      </div>
+      <div>
+        <label for="case_date">Date</label>
+        <input type="date" id="case_date" name="case_date" required>
+      </div>
+    </div>
+
+    <label for="victim_name">Victim Name</label>
+    <input type="text" id="victim_name" name="victim_name" placeholder="e.g. Rahul Mehta" required>
+
+    <label for="crime_type">Reported Type of Crime</label>
+    <select id="crime_type" name="crime_type" required>
+      <option value="">-- Select --</option>
+      <option>Online Banking Fraud</option>
+      <option>Social Media Hacking</option>
+      <option>Phishing</option>
+      <option>Cyberstalking / Harassment</option>
+      <option>Identity Theft</option>
+      <option>Ransomware / Malware</option>
+      <option>Job / Investment Scam</option>
+      <option>Other</option>
+    </select>
+
+    <label for="description">Incident Description</label>
+    <textarea id="description" name="description" placeholder="Describe what happened in detail, e.g. 'Victim received an OTP request and bank account was debited...'" required></textarea>
+    <p class="text-muted" style="margin-top:6px;">📌 Step 5 AI Classification runs automatically on this description.</p>
+
+    <button type="submit" class="btn btn-primary">Create Case &amp; Run AI Classification</button>
+  </form>
+</div>
+{% endblock %}

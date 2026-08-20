@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     DASHBOARD                                          (HTML)
+================================================================ -->
+<div class="page-header">
+  <h1>Investigation Dashboard</h1>
+  <p>Welcome back, {{ session.full_name }}. Here's an overview of all active investigations.</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.today }}</div>
+    <div class="stat-label">Complaints Registered Today</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.total }}</div>
+    <div class="stat-label">Total Cases</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.open }}</div>
+    <div class="stat-label">Open Cases</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.closed }}</div>
+    <div class="stat-label">Closed Cases</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.high_risk }}</div>
+    <div class="stat-label">High-Risk Evidence Flags</div>
+  </div>
+</div>
+
+<h3 style="color:var(--navy); margin-bottom:12px;">AI Investigation Tools</h3>
+<div class="tool-grid">
+  <a href="{{ url_for('new_case') }}" class="tool-card">
+    <div class="tool-icon">📁</div>
+    <h4>New Case</h4>
+    <p>Register a new investigation</p>
+  </a>
+  <a href="{{ url_for('tools_ip') }}" class="tool-card">
+    <div class="tool-icon">🌐</div>
+    <h4>IP Investigation</h4>
+    <p>Trace &amp; assess IP risk</p>
+  </a>
+  <a href="{{ url_for('tools_log') }}" class="tool-card">
+    <div class="tool-icon">📊</div>
+    <h4>Log Analysis</h4>
+    <p>Detect brute force / SQLi / DDoS</p>
+  </a>
+  <a href="{{ url_for('tools_chat') }}" class="tool-card">
+    <div class="tool-icon">💬</div>
+    <h4>Chat Analysis</h4>
+    <p>Scan chats for scam language</p>
+  </a>
+  <a href="{{ url_for('tools_url') }}" class="tool-card">
+    <div class="tool-icon">🔗</div>
+    <h4>URL Analysis</h4>
+    <p>Check links for phishing</p>
+  </a>
+</div>
+
+<div class="card">
+  <h2>All Cases</h2>
+  {% if cases %}
+  <table>
+    <thead>
+      <tr>
+        <th>Case ID</th>
+        <th>Victim</th>
+        <th>Reported Type</th>
+        <th>AI Predicted Category</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in cases %}
+      <tr>
+        <td><b>{{ c.case_id }}</b></td>
+        <td>{{ c.victim_name }}</td>
+        <td>{{ c.crime_type }}</td>
+        <td>{{ c.predicted_category }}</td>
+        <td><span class="badge badge-{{ 'open' if c.status=='Open' else 'closed' }}">{{ c.status }}</span></td>
+        <td>{{ c.created_at }}</td>
+        <td><a href="{{ url_for('case_detail', case_id=c.case_id) }}" class="btn btn-secondary btn-sm">Open</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted">No cases yet. Click "New Case" to register your first investigation.</p>
+  {% endif %}
+</div>
+{% endblock %}
