@@ -1,0 +1,41 @@
+{% extends "base_public.html" %}
+{% block title %}{{ case.case_id }} - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     COMPLAINT DETAIL (public - status + timeline only, no evidence
+     analysis internals, no other complainants' data)       (HTML)
+================================================================ -->
+<div class="page-header">
+  <h1>Complaint {{ case.case_id }}</h1>
+  <p>Filed on {{ case.case_date }} &middot; Status:
+    <span class="badge badge-{{ 'closed' if case.status == 'Closed' else 'open' }}">{{ case.status }}</span>
+  </p>
+</div>
+
+<div class="card">
+  <h2>Complaint Summary</h2>
+  <div class="kv-grid">
+    <div class="kv-item"><div class="kv-label">Type</div><div class="kv-value">{{ case.crime_type }}</div></div>
+    <div class="kv-item"><div class="kv-label">AI Category</div><div class="kv-value">{{ case.predicted_category }}</div></div>
+  </div>
+  <p class="mt-16"><b>Description:</b> {{ case.description }}</p>
+</div>
+
+<div class="card">
+  <h2>Status Timeline</h2>
+  <div class="timeline">
+    {% if timeline %}
+      {% for t in timeline %}
+      <div class="timeline-item">
+        <div class="t-time">{{ t.event_time }}</div>
+        <div class="t-desc">{{ t.event_desc }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No updates yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<a href="{{ url_for('my_complaints') }}" class="btn btn-secondary">&larr; Back to My Complaints</a>
+{% endblock %}

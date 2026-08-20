@@ -1,0 +1,33 @@
+{% extends "base_public.html" %}
+{% block title %}File a Complaint - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     FILE A COMPLAINT (public)                            (HTML)
+================================================================ -->
+<div class="page-header">
+  <h1>File a <span class="accent">Cybercrime</span> Complaint</h1>
+  <p>Describe what happened. Our AI system will automatically categorize your complaint and assign it a Complaint ID for tracking.</p>
+</div>
+
+<div class="card" style="max-width:640px;">
+  <form method="POST" action="{{ url_for('file_complaint') }}">
+    <label for="crime_type">Type of Incident</label>
+    <select id="crime_type" name="crime_type" required>
+      <option value="">-- Select --</option>
+      <option>Online Banking Fraud</option>
+      <option>Social Media Hacking</option>
+      <option>Phishing</option>
+      <option>Cyberstalking / Harassment</option>
+      <option>Identity Theft</option>
+      <option>Ransomware / Malware</option>
+      <option>Job / Investment Scam</option>
+      <option>Other</option>
+    </select>
+
+    <label for="description">Describe What Happened</label>
+    <textarea id="description" name="description" rows="6" placeholder="Please provide as much detail as possible: what happened, when, and any amounts, links, or account details involved." required></textarea>
+
+    <button type="submit" class="btn btn-primary">Submit Complaint</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base_public.html" %}
+{% block title %}My Complaints - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     MY COMPLAINTS (public - shows only this user's own complaints,
+     with basic status tracking. No evidence/AI internals exposed.)
+================================================================ -->
+<div class="page-header">
+  <h1>My Complaints</h1>
+  <p>Track the status of complaints you've filed.</p>
+</div>
+
+<div class="card">
+  {% if complaints %}
+  <table>
+    <thead>
+      <tr><th>Complaint ID</th><th>Type</th><th>AI Category</th><th>Status</th><th>Filed On</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for c in complaints %}
+      <tr>
+        <td><b>{{ c.case_id }}</b></td>
+        <td>{{ c.crime_type }}</td>
+        <td>{{ c.predicted_category }}</td>
+        <td><span class="badge badge-{{ 'closed' if c.status == 'Closed' else 'open' }}">{{ c.status }}</span></td>
+        <td>{{ c.case_date }}</td>
+        <td><a href="{{ url_for('my_complaint_detail', case_id=c.case_id) }}" class="btn btn-secondary btn-sm">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted">You haven't filed any complaints yet.</p>
+  <a href="{{ url_for('file_complaint') }}" class="btn btn-primary mt-16" style="max-width:220px;">File a Complaint</a>
+  {% endif %}
+</div>
+{% endblock %}

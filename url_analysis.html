@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}URL Analysis - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     STEP 9: URL ANALYSIS                          (HTML + JS AJAX)
+================================================================ -->
+<div class="page-header">
+  <h1>🔗 URL / Link Phishing Analysis</h1>
+  <p>Enter a suspicious URL. The AI checks HTTPS usage, domain age, suspicious keywords, and structure.</p>
+</div>
+
+<div class="card" style="max-width:650px;">
+  <label>URL</label>
+  <input type="text" id="urlInput" placeholder="e.g. http://secure-bank-login-verify.xyz">
+  <button class="btn btn-primary mt-16" id="urlBtn" onclick="analyzeUrl()">🤖 Analyze URL</button>
+  <div id="urlResult"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// (JAVASCRIPT) Sends URL to Python backend for heuristic phishing scoring
+async function analyzeUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  const btn = document.getElementById('urlBtn');
+  const resultDiv = document.getElementById('urlResult');
+  if (!url) { alert('Please enter a URL.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Checking...';
+
+  try {
+    const res = await fetch("{{ url_for('api_url_analysis') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    const riskColor = data.risk === 'High' ? 'var(--red)' : data.risk === 'Medium' ? 'var(--orange)' : 'var(--green)';
+
+    resultDiv.innerHTML = `
+      <div class="result-box">
+        <h3>URL Risk: ${data.risk}</h3>
+        <div class="risk-meter-wrap">
+          <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${data.risk_score}%; background:${riskColor};"></div></div>
+          <div class="risk-label"><span>Risk Score</span><span style="color:${riskColor}">${data.risk_score}%</span></div>
+        </div>
+        <ul class="findings-list">${data.findings.map(f => `<li>${f}</li>`).join('')}</ul>
+      </div>`;
+  } catch (err) {
+    resultDiv.innerHTML = '<div class="alert alert-error">Analysis failed.</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🤖 Analyze URL';
+}
+</script>
+{% endblock %}

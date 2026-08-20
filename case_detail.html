@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}{{ case.case_id }} - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     CASE DETAIL: EVIDENCE UPLOAD / AI ANALYSIS / TIMELINE / REPORT
+     (HTML + JS for AJAX upload)
+================================================================ -->
+<div class="page-header">
+  <h1>Case {{ case.case_id }}</h1>
+  <p>{{ case.victim_name }} &middot; Reported: {{ case.crime_type }} &middot; AI Category: <b>{{ case.predicted_category }}</b></p>
+</div>
+
+<div class="grid-2">
+  <!-- LEFT COLUMN -->
+  <div>
+    <div class="card">
+      <h2>Case Information</h2>
+      <div class="kv-grid">
+        <div class="kv-item"><div class="kv-label">Case ID</div><div class="kv-value">{{ case.case_id }}</div></div>
+        <div class="kv-item"><div class="kv-label">Status</div><div class="kv-value">{{ case.status }}</div></div>
+        <div class="kv-item"><div class="kv-label">Date</div><div class="kv-value">{{ case.case_date }}</div></div>
+        <div class="kv-item"><div class="kv-label">Investigator</div><div class="kv-value">{{ case.created_by }}</div></div>
+      </div>
+      <p class="mt-16"><b>Description:</b> {{ case.description }}</p>
+      <a href="{{ url_for('generate_report', case_id=case.case_id) }}" class="btn btn-primary mt-16">📄 Generate AI PDF Report</a>
+    </div>
+
+    <!-- STEP 3 & 4: Evidence Upload + AI Analysis -->
+    <div class="card">
+      <h2>Upload Evidence</h2>
+      <form id="evidenceForm">
+        <label>Evidence Type</label>
+        <select name="evidence_type" id="evidence_type">
+          <option>Email</option>
+          <option>Chat Screenshot</option>
+          <option>Log File</option>
+          <option>PDF Document</option>
+          <option>Image</option>
+          <option>Video</option>
+          <option>IP Log</option>
+          <option>Network Traffic</option>
+        </select>
+
+        <label>Upload File (optional)</label>
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📤</div>
+          <p>Click or drag a file here (email .txt/.eml, log, image, PDF, video...)</p>
+          <div class="file-name" id="fileNameDisplay"></div>
+        </div>
+        <input type="file" id="fileInput" name="evidence_file" style="display:none;">
+
+        <label>Or Paste Evidence Text (e.g. email content, message)</label>
+        <textarea id="textContent" name="text_content" placeholder="Paste the raw email / message text here for AI phishing analysis..."></textarea>
+
+        <button type="submit" class="btn btn-primary mt-16" id="analyzeBtn">🤖 Upload &amp; Run AI Analysis</button>
+      </form>
+
+      <div id="analysisResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Evidence Log</h2>
+      {% if evidence %}
+      <table>
+        <thead><tr><th>File</th><th>Type</th><th>Risk</th><th>Uploaded</th></tr></thead>
+        <tbody>
+          {% for e in evidence %}
+          <tr>
+            <td>{{ e.filename }}</td>
+            <td>{{ e.evidence_type }}</td>
+            <td>
+              <span class="badge badge-{{ 'high' if e.risk_score >= 70 else ('medium' if e.risk_score >= 35 else 'low') }}">
+                {{ e.risk_score }}%
+              </span>
+            </td>
+            <td>{{ e.uploaded_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="text-muted">No evidence uploaded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: STEP 10 TIMELINE -->
+  <div>
+    <div class="card">
+      <h2>Evidence Timeline</h2>
+      <form method="POST" action="{{ url_for('add_timeline_event', case_id=case.case_id) }}" class="mt-16">
+        <label>Event Time</label>
+        <input type="datetime-local" name="event_time" required>
+        <label>Event Description</label>
+        <input type="text" name="event_desc" placeholder="e.g. Victim clicked phishing link" required>
+        <button type="submit" class="btn btn-secondary btn-block mt-16">+ Add Timeline Event</button>
+      </form>
+
+      <div class="timeline mt-24">
+        {% if timeline %}
+          {% for t in timeline %}
+          <div class="timeline-item">
+            <div class="t-time">{{ t.event_time }}</div>
+            <div class="t-desc">{{ t.event_desc }}</div>
+            <div class="t-source">Source: {{ t.source }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted">No timeline events yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ================================================================
+// STEP 3 & 4: Evidence upload + AI analysis via AJAX      (JAVASCRIPT)
+// ================================================================
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) fileNameDisplay.textContent = "Selected: " + fileInput.files[0].name;
+});
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  fileInput.files = e.dataTransfer.files;
+  if (fileInput.files.length) fileNameDisplay.textContent = "Selected: " + fileInput.files[0].name;
+});
+
+document.getElementById('evidenceForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Analyzing...';
+
+  const formData = new FormData();
+  formData.append('evidence_type', document.getElementById('evidence_type').value);
+  formData.append('text_content', document.getElementById('textContent').value);
+  if (fileInput.files.length) formData.append('evidence_file', fileInput.files[0]);
+
+  try {
+    const res = await fetch("{{ url_for('upload_evidence', case_id=case.case_id) }}", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    renderAnalysis(data.analysis);
+  } catch (err) {
+    document.getElementById('analysisResult').innerHTML =
+      '<div class="alert alert-error">Analysis failed. Please try again.</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🤖 Upload &amp; Run AI Analysis';
+});
+
+function renderAnalysis(result) {
+  const riskColor = result.risk_score >= 70 ? 'var(--red)' : result.risk_score >= 35 ? 'var(--orange)' : 'var(--green)';
+  let html = `
+    <div class="result-box">
+      <h3>AI Analysis Result</h3>
+      <div class="risk-meter-wrap">
+        <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${result.risk_score}%; background:${riskColor};"></div></div>
+        <div class="risk-label"><span>Risk Score</span><span style="color:${riskColor}">${result.risk_score}% - ${result.verdict}</span></div>
+      </div>
+      <ul class="findings-list">
+        ${result.findings.map(f => `<li>${f}</li>`).join('')}
+      </ul>
+    </div>`;
+  document.getElementById('analysisResult').innerHTML = html;
+  // reload page after short delay so evidence log + timeline refresh
+  setTimeout(() => window.location.reload(), 1800);
+}
+</script>
+{% endblock %}

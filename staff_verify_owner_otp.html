@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- ================================================================
+     VERIFY OWNER OTP - gate for managing staff accounts   (HTML)
+     Only reachable after /staff/forgot-password confirms the
+     phone number matches OWNER_PHONE in app.py.
+================================================================ -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP - CyberInvestigate AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-box">
+      <div class="logo-row">
+        {% include "_logo.html" %}
+        <h1>Verify OTP</h1>
+        <div class="subtitle">Enter the 6-digit code sent to your phone</div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('staff_verify_owner_otp') }}">
+        <label for="otp">6-Digit OTP</label>
+        <input type="text" id="otp" name="otp" placeholder="Enter OTP" maxlength="6" required autofocus>
+        <button type="submit" class="btn btn-primary">Verify &amp; Continue</button>
+      </form>
+
+      <div class="demo-hint">
+        <a href="{{ url_for('staff_forgot_password') }}" style="color:var(--neon); font-weight:600;">Didn't get a code? Request again</a>
+      </div>
+      <div class="demo-hint">
+        <a href="{{ url_for('staff_login') }}" style="color:var(--neon); font-weight:600;">Cancel and back to Login</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Chat Analysis - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     STEP 8: CHAT / MESSAGE ANALYSIS                (HTML + JS AJAX)
+================================================================ -->
+<div class="page-header">
+  <h1>💬 Chat / Message Scam Analysis</h1>
+  <p>Paste WhatsApp / SMS / chat text. The AI scans for scam keywords, threats, fraud language, and blackmail patterns.</p>
+</div>
+
+<div class="card" style="max-width:700px;">
+  <label>Chat / Message Text</label>
+  <textarea id="chatText" rows="6" placeholder="e.g. Congratulations! You have won a lottery. Send OTP now to claim your prize. Click this link immediately!"></textarea>
+  <button class="btn btn-primary mt-16" id="chatBtn" onclick="analyzeChat()">🤖 Analyze Message</button>
+  <div id="chatResult"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// (JAVASCRIPT) Sends chat text to Python backend for scam keyword scoring
+async function analyzeChat() {
+  const text = document.getElementById('chatText').value.trim();
+  const btn = document.getElementById('chatBtn');
+  const resultDiv = document.getElementById('chatResult');
+  if (!text) { alert('Please paste some chat text.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Analyzing...';
+
+  try {
+    const res = await fetch("{{ url_for('api_chat_analysis') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    const riskColor = data.risk_score >= 40 ? 'var(--red)' : data.risk_score >= 15 ? 'var(--orange)' : 'var(--green)';
+
+    resultDiv.innerHTML = `
+      <div class="result-box">
+        <h3>AI Result: ${data.verdict}</h3>
+        <div class="risk-meter-wrap">
+          <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${data.risk_score}%; background:${riskColor};"></div></div>
+          <div class="risk-label"><span>Confidence</span><span style="color:${riskColor}">${data.confidence}%</span></div>
+        </div>
+        <div class="kv-grid">
+          <div class="kv-item"><div class="kv-label">Category</div><div class="kv-value">${data.category}</div></div>
+          <div class="kv-item"><div class="kv-label">Phrases Matched</div><div class="kv-value">${data.matched_phrases.length}</div></div>
+        </div>
+        ${data.matched_phrases.length ? `<ul class="findings-list">${data.matched_phrases.map(p => `<li>Detected phrase: "${p}"</li>`).join('')}</ul>` : ''}
+      </div>`;
+  } catch (err) {
+    resultDiv.innerHTML = '<div class="alert alert-error">Analysis failed.</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🤖 Analyze Message';
+}
+</script>
+{% endblock %}

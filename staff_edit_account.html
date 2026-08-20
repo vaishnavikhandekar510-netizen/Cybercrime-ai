@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Edit <span class="accent">Staff Account</span></h1>
+  <p>{{ account.role }} &middot; {{ account.full_name }}</p>
+</div>
+
+<div class="card" style="max-width: 460px;">
+  <form method="POST" action="{{ url_for('staff_edit_account', username=account.username) }}">
+    <label for="new_username">Username</label>
+    <input type="text" id="new_username" name="new_username" value="{{ account.username }}" required>
+
+    <label for="new_password" style="margin-top:14px; display:block;">New Password</label>
+    <div class="password-field-wrap">
+      <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current password" minlength="6">
+      <button type="button" class="password-toggle-btn" data-target="new_password" aria-label="Show password">
+        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+
+    <label for="confirm_password" style="margin-top:14px; display:block;">Confirm New Password</label>
+    <div class="password-field-wrap">
+      <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password" minlength="6">
+      <button type="button" class="password-toggle-btn" data-target="confirm_password" aria-label="Show password">
+        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+  </form>
+</div>
+
+<a href="{{ url_for('staff_manage_accounts') }}" style="color:var(--neon); font-weight:600; font-size:0.85rem;">&larr; Back to Staff Accounts</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const EYE_OPEN = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>';
+  const EYE_OFF = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a18.6 18.6 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetInput = document.getElementById(btn.dataset.target);
+      const icon = btn.querySelector('.eye-icon');
+      const isHidden = targetInput.type === 'password';
+      targetInput.type = isHidden ? 'text' : 'password';
+      icon.innerHTML = isHidden ? EYE_OFF : EYE_OPEN;
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+  });
+</script>
+{% endblock %}

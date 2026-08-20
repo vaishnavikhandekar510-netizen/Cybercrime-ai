@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}IP Investigation - CyberInvestigate AI{% endblock %}
+{% block content %}
+<!-- ================================================================
+     STEP 6: IP INVESTIGATION                     (HTML + JS AJAX)
+================================================================ -->
+<div class="page-header">
+  <h1>🌐 IP Investigation Tool</h1>
+  <p>Enter a suspect IPv4 address to check geolocation, ISP, blacklist status, and VPN detection.</p>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <label for="ipInput">IP Address</label>
+  <input type="text" id="ipInput" placeholder="e.g. 192.168.1.10 or 185.220.101.5">
+  <button class="btn btn-primary mt-16" id="checkBtn" onclick="checkIP()">🔍 Investigate IP</button>
+  <div id="ipResult"></div>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <h3>Try example IPs</h3>
+  <p class="text-muted">185.220.101.5 (blacklisted) &middot; 45.155.205.1 (blacklisted) &middot; 192.168.1.5 (private) &middot; 103.21.58.10 (public)</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// (JAVASCRIPT) Calls the Python /api/ip-check endpoint
+async function checkIP() {
+  const ip = document.getElementById('ipInput').value.trim();
+  const btn = document.getElementById('checkBtn');
+  const resultDiv = document.getElementById('ipResult');
+  if (!ip) { alert('Please enter an IP address'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Investigating...';
+
+  try {
+    const res = await fetch("{{ url_for('api_ip_check') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ip })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      resultDiv.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+    } else {
+      const riskColor = data.risk === 'High' ? 'var(--red)' : data.risk === 'Medium' ? 'var(--orange)' : 'var(--green)';
+      resultDiv.innerHTML = `
+        <div class="result-box">
+          <h3>Investigation Result: ${data.ip}</h3>
+          <div class="kv-grid">
+            <div class="kv-item"><div class="kv-label">Country</div><div class="kv-value">${data.country}</div></div>
+            <div class="kv-item"><div class="kv-label">ISP</div><div class="kv-value">${data.isp}</div></div>
+            <div class="kv-item"><div class="kv-label">Blacklisted</div><div class="kv-value" style="color:${data.blacklisted ? 'var(--red)' : 'var(--green)'}">${data.blacklisted ? 'YES' : 'No'}</div></div>
+            <div class="kv-item"><div class="kv-label">VPN Detected</div><div class="kv-value">${data.vpn_detected ? 'Yes' : 'No'}</div></div>
+          </div>
+          <div class="risk-meter-wrap">
+            <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${data.risk_score}%; background:${riskColor};"></div></div>
+            <div class="risk-label"><span>Threat Level</span><span style="color:${riskColor}">${data.risk}</span></div>
+          </div>
+        </div>`;
+    }
+  } catch (err) {
+    resultDiv.innerHTML = '<div class="alert alert-error">Something went wrong.</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🔍 Investigate IP';
+}
+</script>
+{% endblock %}
